@@ -411,6 +411,20 @@ const updateTags = (type, tags) => {
     const newTags = [];
     let indexToDelete;
 
+    const setTagRenderingPriorities = () => {
+        if (tags && tags.length) {
+            tags.forEach(tag => {
+                if (type === 'link' && tag.rel === 'alternate' && tag.hrerfLang  !== undefined){
+                    tag.priority = 1
+                }
+                console.log(`HELMET type => ${type} TAG =>  ${JSON.stringify(tag)}`)
+            })
+        }
+    }
+
+    setTagRenderingPriorities()
+
+
     if (tags && tags.length) {
         tags.forEach(tag => {
             const newElement = document.createElement(type);
@@ -453,7 +467,14 @@ const updateTags = (type, tags) => {
     }
 
     oldTags.forEach(tag => tag.parentNode.removeChild(tag));
-    newTags.forEach(tag => headElement.appendChild(tag));
+    newTags.forEach(tag => {
+        if ((type === 'link' && tag.rel === 'alternate' && tag.hreflang  !== undefined) || (type === 'link' && tag.rel === 'canonical' )){
+            document.getElementsByTagName('title')[0].after(tag)
+
+        } else {
+            headElement.appendChild(tag)
+        }
+    });
 
     return {
         oldTags,
