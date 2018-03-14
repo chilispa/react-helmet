@@ -472,17 +472,14 @@ const updateTags = (type, tags) => {
     }
 
     oldTags.forEach(tag => tag.parentNode.removeChild(tag));
-    const domTitle = document.getElementsByTagName("title")[0];
+    const domAuthor = document.getElementById("author");
     newTags.forEach(tag => {
-        if (
-            (type === "link" &&
-                tag.rel === "alternate" &&
-                tag.hreflang !== undefined) ||
-            (type === "link" &&
-                tag.rel === "canonical" &&
-                domTitle !== undefined)
+        if (((type === "link" && tag.rel === "alternate" && tag.hreflang !== undefined) ||
+            (type === "link" && tag.rel === "canonical" ) ||
+            (type === "meta" && tag.name === "description" )) &&
+            domAuthor !== undefined
         ) {
-            domTitle.after(tag);
+            domAuthor.insertBefore(tag);
         } else {
             headElement.appendChild(tag);
         }
