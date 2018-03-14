@@ -479,7 +479,7 @@ const updateTags = (type, tags) => {
             (type === "meta" && tag.name === "description" )) &&
             domAuthor !== undefined
         ) {
-            domAuthor.insertBefore(tag);
+            domAuthor.parentNode.insertBefore(tag, domAuthor);
         } else {
             headElement.appendChild(tag);
         }
