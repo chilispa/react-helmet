@@ -474,9 +474,13 @@ const updateTags = (type, tags) => {
     oldTags.forEach(tag => tag.parentNode.removeChild(tag));
     const domAuthor = document.getElementById("author");
     newTags.forEach(tag => {
-        if (((type === "link" && tag.rel === "alternate" && tag.hreflang !== undefined) ||
-            (type === "link" && tag.rel === "canonical" ) ||
-            (type === "meta" && tag.name === "description" )) &&
+        if (
+            ((type === "link" &&
+                tag.rel === "alternate" &&
+                tag.hreflang !== undefined) ||
+                (type === "link" && tag.rel === "canonical") ||
+                (type === "meta" && tag.name === "description") ||
+                (type === "meta" && tag.name === "robots")) &&
             domAuthor !== undefined
         ) {
             domAuthor.parentNode.insertBefore(tag, domAuthor);
