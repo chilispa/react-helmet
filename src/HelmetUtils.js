@@ -24,6 +24,7 @@ const encodeSpecialCharacters = (str, encode = true) => {
         .replace(/'/g, "&#x27;");
 };
 
+
 const getTitleFromPropsList = propsList => {
     const innermostTitle = getInnermostProperty(propsList, TAG_NAMES.TITLE);
     const innermostTemplate = getInnermostProperty(
@@ -476,7 +477,8 @@ const updateTags = (type, tags) => {
     newTags.forEach(tag => {
         if (((type === "link" && tag.rel === "alternate" && tag.hreflang !== undefined) ||
             (type === "link" && tag.rel === "canonical" ) ||
-            (type === "meta" && tag.name === "description" )) &&
+            (type === "meta" && tag.name === "description" ) || 
+            (type === "meta" && tag.name === "robots" )) &&
             domAuthor !== undefined
         ) {
             domAuthor.parentNode.insertBefore(tag, domAuthor);
