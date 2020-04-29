@@ -1,7 +1,7 @@
 {
-  "name": "react-helmet",
+  "name": "react-helmet-chili",
   "description": "A document head manager for React",
-  "version": "5.2.0",
+  "version": "5.2.0-chili.6",
   "main": "./lib/Helmet.js",
   "author": "NFL <engineers@nfl.com>",
   "contributors": [
@@ -32,7 +32,7 @@
   "dependencies": {
     "deep-equal": "^1.0.1",
     "object-assign": "^4.1.1",
-    "react-side-effect": "^1.1.0",
+    "react-side-effect": "1.1.0",
     "prop-types": "^15.5.4"
   },
   "devDependencies": {
