@@ -33,7 +33,13 @@ const getTitleFromPropsList = propsList => {
 
     if (innermostTemplate && innermostTitle) {
         // use function arg to avoid need to escape $ characters
-        return innermostTemplate.replace(/%s/g, () => innermostTitle);
+        return innermostTemplate.replace(
+            /%s/g,
+            () =>
+                Array.isArray(innermostTitle)
+                    ? innermostTitle.join("")
+                    : innermostTitle
+        );
     }
 
     const innermostDefaultTitle = getInnermostProperty(
@@ -112,35 +118,43 @@ const getTagsFromPropsList = (tagName, primaryAttributes, propsList) => {
 
             instanceTags
                 .filter(tag => {
-                    const primaryAttributeKeys = [];
+                    let primaryAttributeKey;
                     const keys = Object.keys(tag);
-                    for (let i = 0; i < primaryAttributes.length; i++) {
-                        const primaryAttributeKeyCandidate =
-                            primaryAttributes[i];
+                    for (let i = 0; i < keys.length; i++) {
+                        const attributeKey = keys[i];
+                        const lowerCaseAttributeKey = attributeKey.toLowerCase();
 
-                        for (let j = 0; j < keys.length; j++) {
-                            const attributeKey = keys[j];
-                            const lowerCaseAttributeKey = attributeKey.toLowerCase();
-                            const attributeMatch =
-                                primaryAttributeKeyCandidate === attributeKey ||
-                                primaryAttributeKeyCandidate ===
-                                    lowerCaseAttributeKey;
-                            const relStylesheet =
+                        // Special rule with link tags, since rel and href are both primary tags, rel takes priority
+                        if (
+                            primaryAttributes.indexOf(lowerCaseAttributeKey) !==
+                                -1 &&
+                            !(
+                                primaryAttributeKey === TAG_PROPERTIES.REL &&
+                                tag[primaryAttributeKey].toLowerCase() ===
+                                    "canonical"
+                            ) &&
+                            !(
                                 lowerCaseAttributeKey === TAG_PROPERTIES.REL &&
-                                tag[attributeKey] === "stylesheet";
-
-                            if (attributeMatch && !relStylesheet) {
-                                if (!tag[attributeKey]) return false;
-                                primaryAttributeKeys.push(
-                                    primaryAttributeKeyCandidate
-                                );
-                            }
+                                tag[lowerCaseAttributeKey].toLowerCase() ===
+                                    "stylesheet"
+                            )
+                        ) {
+                            primaryAttributeKey = lowerCaseAttributeKey;
+                        }
+                        // Special case for innerHTML which doesn't work lowercased
+                        if (
+                            primaryAttributes.indexOf(attributeKey) !== -1 &&
+                            (attributeKey === TAG_PROPERTIES.INNER_HTML ||
+                                attributeKey === TAG_PROPERTIES.CSS_TEXT ||
+                                attributeKey === TAG_PROPERTIES.ITEM_PROP)
+                        ) {
+                            primaryAttributeKey = attributeKey;
                         }
                     }
 
-                    const primaryAttributeKey = primaryAttributeKeys[0];
-
-                    if (!primaryAttributeKey) return false;
+                    if (!primaryAttributeKey || !tag[primaryAttributeKey]) {
+                        return false;
+                    }
 
                     const value = tag[primaryAttributeKey].toLowerCase();
 
@@ -259,21 +273,20 @@ const rafPolyfill = (() => {
 
 const cafPolyfill = (id: string | number) => clearTimeout(id);
 
-const requestAnimationFrame =
-    typeof window !== "undefined"
-        ? window.requestAnimationFrame ||
+const requestAnimationFrame = typeof window !== "undefined"
+    ? (window.requestAnimationFrame &&
+          window.requestAnimationFrame.bind(window)) ||
           window.webkitRequestAnimationFrame ||
           window.mozRequestAnimationFrame ||
           rafPolyfill
-        : global.requestAnimationFrame || rafPolyfill;
+    : global.requestAnimationFrame || rafPolyfill;
 
-const cancelAnimationFrame =
-    typeof window !== "undefined"
-        ? window.cancelAnimationFrame ||
+const cancelAnimationFrame = typeof window !== "undefined"
+    ? window.cancelAnimationFrame ||
           window.webkitCancelAnimationFrame ||
           window.mozCancelAnimationFrame ||
           cafPolyfill
-        : global.cancelAnimationFrame || cafPolyfill;
+    : global.cancelAnimationFrame || cafPolyfill;
 
 const warn = msg => {
     return console && typeof console.warn === "function" && console.warn(msg);
@@ -446,10 +459,9 @@ const updateTags = (type, tags) => {
                             );
                         }
                     } else {
-                        const value =
-                            typeof tag[attribute] === "undefined"
-                                ? ""
-                                : tag[attribute];
+                        const value = typeof tag[attribute] === "undefined"
+                            ? ""
+                            : tag[attribute];
                         newElement.setAttribute(attribute, value);
                     }
                 }
@@ -497,10 +509,9 @@ const updateTags = (type, tags) => {
 
 const generateElementAttributesAsString = attributes =>
     Object.keys(attributes).reduce((str, key) => {
-        const attr =
-            typeof attributes[key] !== "undefined"
-                ? `${key}="${attributes[key]}"`
-                : `${key}`;
+        const attr = typeof attributes[key] !== "undefined"
+            ? `${key}="${attributes[key]}"`
+            : `${key}`;
         return str ? `${str} ${attr}` : attr;
     }, "");
 
@@ -529,13 +540,12 @@ const generateTagsAsString = (type, tags, encode) =>
                     )
             )
             .reduce((string, attribute) => {
-                const attr =
-                    typeof tag[attribute] === "undefined"
-                        ? attribute
-                        : `${attribute}="${encodeSpecialCharacters(
-                              tag[attribute],
-                              encode
-                          )}"`;
+                const attr = typeof tag[attribute] === "undefined"
+                    ? attribute
+                    : `${attribute}="${encodeSpecialCharacters(
+                          tag[attribute],
+                          encode
+                      )}"`;
                 return string ? `${string} ${attr}` : attr;
             }, "");
 
@@ -543,9 +553,9 @@ const generateTagsAsString = (type, tags, encode) =>
 
         const isSelfClosing = SELF_CLOSING_TAGS.indexOf(type) === -1;
 
-        return `${str}<${type} ${HELMET_ATTRIBUTE}="true" ${attributeHtml}${
-            isSelfClosing ? `/>` : `>${tagContent}</${type}>`
-        }`;
+        return `${str}<${type} ${HELMET_ATTRIBUTE}="true" ${attributeHtml}${isSelfClosing
+            ? `/>`
+            : `>${tagContent}</${type}>`}`;
     }, "");
 
 const convertElementAttributestoReactProps = (attributes, initProps = {}) => {
